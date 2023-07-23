@@ -1,0 +1,169 @@
+import pygame,random
+pygame.init()
+sc = pygame.display.set_mode((400,700))
+pygame.key.set_repeat(10)
+pygame.display.set_caption("Airship war")
+bg = pygame.image.load("C:\\mxcmaterials\\飞机大战背景-a86d703b-6a89-4538-b7b7-956e4461fc9c.png")
+pygame.mixer.music.load("C:\\mxcmaterials\\game_music-234c5a4e-16c2-454d-ac1b-4aa49b524815.wav")
+enemy_down_sound = pygame.mixer.Sound("C:\\mxcmaterials\\enemy1_down-0a1f0255-4692-4c2a-9b2e-704734cd999b.wav")
+big_enemy_down = pygame.mixer.Sound("C:\\mxcmaterials\\bigenemy_down-003e1ef4-398e-434c-be05-eaedf7aed42f.wav")
+pygame.mixer.music.play(-1)
+
+class MyPlane():
+    def __init__(self):
+        self.shape_1 = pygame.image.load("C:\\mxcmaterials\\hero_plane_1-571a2872-8f8d-4bc6-ac1b-e737de54d7cf.png")
+        self.shape_2 = pygame.image.load("C:\\mxcmaterials\\hero_plane_2-88be8a3a-f8db-47c5-8a8b-f2de2f9c05d6.png")
+        self.shape = self.shape_1
+        self.pos = [150,500]
+        self.width = self.shape_1.get_width()
+        self.height= self.shape_1.get_height()
+    def draw_me(self):
+        sc.blit(self.shape,self.pos)
+    def move_up(self):
+        if self.pos[1] > 0:
+            self.pos[1] -= 3
+    def move_down(self):
+        if self.pos[1] < 700-self.height:
+            self.pos[1] += 3  
+    def move_left(self):
+        if self.pos[0] > 0:
+            self.pos[0] -= 3
+    def move_right(self):
+        if self.pos[0] < 400-self.width:
+            self.pos[0] += 3
+    def switch_shape(self):
+        if self.shape==self.shape_1:
+            self.shape=self.shape_2
+        else:
+            self.shape = self.shape_1
+class Enemy():
+    def __init__(self):
+        self.shape = pygame.image.load("C:\\mxcmaterials\\enemy-9b8cde6c-bee1-4ade-a0a3-9a007b7e8008.png")
+        self.width = self.shape.get_width()
+        self.height = self.shape.get_height()
+        x = random.randint(0, 400-self.width)
+        y = random.randint(-2000, -self.height)
+        self.pos = [x,y]
+    def draw_me(self):
+        sc.blit(self.shape,self.pos)   
+    def move(self):
+        if self.pos[1] < 700:
+            self.pos[1] +=1
+        else:
+            self.reset()
+    def reset(self):
+        self.pos[0] = random.randint(0, 400-self.width)
+        self.pos[1] = random.randint(-2000, -self.height)
+def collide(a,b):
+    if b.pos[0]+b.width > a.pos[0] and a.pos[0]+a.width > b.pos[0]:
+        if b.pos[1]+b.width > a.pos[1] and a.pos[1]+a.width > b.pos[1]:
+            return "Gameover"
+class Bullet():
+    def __init__(self,x,y):
+        self.shape = pygame.image.load("C:\\mxcmaterials\\bullet-8ac85af7-6341-4ce9-952f-79327079c68e.png")
+        self.pos = [x,y]
+        self.width = 5
+        self.height = 11
+        self.active = True
+    def draw_me(self):
+        sc.blit(self.shape,self.pos)
+    def move(self):
+        self.pos[1] -= 4
+        if self.pos[1] < 0:
+            self.active = False
+class BigEnemy():
+    def __init__(self):
+        self.energy = 5
+        self.image = pygame.image.load("C:\\mxcmaterials\\bigenemy-a914eed4-4f58-4251-9c75-a6229a2827e8.png")
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        x = random.randint(0, 400-self.width)
+        y = random.randint(-3000,-self.height)
+        self.pos = [x,y]
+    def draw_me(self):
+        sc.blit(self.image,self.pos)   
+    def move(self):
+        if self.pos[1] < 700:
+            self.pos[1] +=1
+        else:
+            self.reset()
+    def reset(self):
+        self.energy = 5
+        self.pos[0] = random.randint(0, 400-self.width)
+        self.pos[1] = random.randint(-3000, -self.height)
+hero= MyPlane()
+flag = 0
+enemy_list=[]
+bullet_list = []
+big = BigEnemy()
+for i in range(8):
+    bullet = Bullet(hero.pos[0]+44.5,hero.pos[1])
+    bullet_list.append(bullet)
+for i in range(15):
+    enemy=Enemy()
+    enemy_list.append(enemy)
+DIY_EVENT=pygame.USEREVENT+1
+pygame.time.set_timer(DIY_EVENT,200)
+score=0
+font = pygame.font.SysFont("Cursive",48,True)
+while True:
+    sc.blit(bg,(0,0))
+    time_text = font.render("SCORE: "+str(score),True,(255,0,0))
+    sc.blit(time_text,(50,20))
+    hero.draw_me()
+    big.draw_me()
+    big.move()
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            exit()
+        if event.type ==pygame.KEYDOWN:
+            if event.key==pygame.K_UP:
+                hero.move_up()
+                
+            if event.key==pygame.K_DOWN:
+                hero.move_down() 
+                
+            if event.key==pygame.K_LEFT:
+                hero.move_left()
+                
+            if event.key==pygame.K_RIGHT:
+                hero.move_right()  
+        if event.type == DIY_EVENT:
+            bullet = Bullet(hero.pos[0]+44.5,hero.pos[1])
+            bullet_list.append(bullet)
+    for e in enemy_list:
+        e.draw_me()
+        e.move()
+    for e in enemy_list:
+        if collide(hero,e) == "Gameover":
+            pygame.quit()
+            exit()
+    for b in bullet_list:
+        b.draw_me()
+        b.move()
+        if b.active == False:
+            bullet_list.remove(b)
+    for e in enemy_list:
+        for b in bullet_list:
+            if collide(e,b) == "Gameover":
+                bullet_list.remove(b)
+                e.reset()
+                enemy_down_sound.play()
+                en = pygame.image.load("C:\\mxcmaterials\\enemy1_down-91b6fa3d-27db-4317-8781-95e26e7092c9.png")
+                sc.blit(en,b.pos)
+                pygame.display.update()
+                score+=1
+    for b in bullet_list:
+        if collide(big,b) == "Gameover":
+            bullet_list.remove(b)
+            big.energy-=1
+        if big.energy== 0:
+            big.reset()
+            big_enemy_down.play()
+            score+=10
+    flag += 1
+    if flag%15==0:
+        hero.switch_shape()
+    pygame.display.update()
+    
+input()
